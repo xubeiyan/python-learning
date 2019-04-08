@@ -45,9 +45,10 @@ def generateNote(freq):
 		buf.append(avg)
 		buf.popleft()
 		# plot of flag set
-		if gShowPlot and i % 1000 == 0:
-			axline.set_ydata(buf)
-			plt.draw()
+		if gShowPlot:
+			if i % 1000 == 0:
+				axline.set_ydata(buf)
+				plt.draw()
 	
 	# convert samples to 16-bit values and then to a string
 	# the maximum value is 32767 for 16-bit
@@ -86,7 +87,7 @@ def main():
 	parser = argparse.ArgumentParser(description="Generating sounds with Karplus String Algorithm")
 	# add arguments
 	parser.add_argument('--display', action='store_true', required=False)
-	parser.add_argument('--play', action="store_true", required=False)
+	parser.add_argument('--play', action='store_true', required=False)
 	parser.add_argument('--piano', action='store_true', required=False)
 	args = parser.parse_args()
 	
@@ -101,7 +102,30 @@ def main():
 	print('creating notes...')
 	for name, freq in list(pmNotes.items()):
 		fileName = name + '.wav'
-	
+		if not os.path.exists(fileName) or args.display:
+			data = generateNote(freq)
+			print('creating ' + fileName + '...')
+			writeWAVE(fileName, data)
+		else:
+			print('fileName already created. skipping...')
+			
+		# add note to player
+		nplayer.add(name + '.wav')
+		
+		# play note
+		if args.display:
+			nplayer.play(name + '.wav')
+			time.sleep(0.5)
+	# play a random tune
+	if args.play:
+		while True:
+			try:
+				nplayer.playRandom()
+				# rest - 1 to 8 beats
+				rest = np.random.choice([1, 2, 4, 8], 1, p=[0.15, 0.7, 0.1, 0.05])
+				time.sleep(0.25*rest[0])
+			except KeyboardInterrupt:
+				exit()
 # call main
 if __name__ == '__main__':
 	main()
